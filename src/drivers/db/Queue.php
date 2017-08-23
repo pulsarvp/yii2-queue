@@ -92,6 +92,17 @@ class Queue extends CliQueue
         } while (!$delay || sleep($delay) === 0);
     }
 
+	/**
+	 * @param $id
+	 * @param $pid
+	 */
+	public function addPid ($id, $pid)
+	{
+		$this->db->createCommand()->update($this->tableName, [
+			'pid' => $pid,
+		], [ 'id' => $id ])->execute();
+	}
+
     /**
      * @inheritdoc
      */
@@ -114,7 +125,7 @@ class Queue extends CliQueue
     /**
      * @inheritdoc
      */
-    public function status($id)
+    protected function status($id)
     {
         $payload = (new Query())
             ->from($this->tableName)
@@ -133,6 +144,8 @@ class Queue extends CliQueue
             return self::STATUS_WAITING;
         } elseif (!$payload['done_at']) {
             return self::STATUS_RESERVED;
+        }elseif (!$payload['canceled_at']) {
+            return self::STATUS_CANCEL;
         } else {
             return self::STATUS_DONE;
         }
@@ -164,7 +177,7 @@ class Queue extends CliQueue
 
         $payload = (new Query())
             ->from($this->tableName)
-            ->andWhere(['channel' => $this->channel, 'reserved_at' => null])
+            ->andWhere(['channel' => $this->channel, 'reserved_at' => null, 'canceled_at' => null])
             ->andWhere('[[pushed_at]] <= :time - delay', [':time' => time()])
             ->orderBy(['priority' => SORT_ASC, 'id' => SORT_ASC])
             ->limit(1)

@@ -127,13 +127,13 @@ abstract class Command extends Controller
      * @throws
      * @see actionExec()
      */
-    protected function handleMessage($id, $message, $ttr, $attempt)
+    private function handleMessage($id, $message, $ttr, $attempt)
     {
-        // Executes child process        
+        // Executes child process
         $cmd = strtr('{php} {yii} {queue}/exec "{id}" "{ttr}" "{attempt}"', [
             '{php}' => PHP_BINARY,
             '{yii}' => $_SERVER['SCRIPT_FILENAME'],
-            '{queue}' => $this->uniqueId,
+            '{queue}' => $this->id,
             '{id}' => $id,
             '{ttr}' => $ttr,
             '{attempt}' => $attempt,
@@ -149,15 +149,23 @@ abstract class Command extends Controller
 
         $process = new Process($cmd, null, null, $message, $ttr);
         try {
-            $exitCode = $process->run(function ($type, $buffer) {
-                if ($type === Process::ERR) {
-                    $this->stderr($buffer);
-                } else {
-                    $this->stdout($buffer);
-                }
-            });
+	        $exitCode = $process->start(function ($type, $buffer)
+	        {
+		        if ($type === Process::ERR)
+		        {
+			        $this->stderr($buffer);
+		        }
+		        else
+		        {
+			        $this->stdout($buffer);
+		        }
+	        });
+	        $this->queue->addPid($id, $process->getPid());
+	        while ($process->isRunning())
+	        {
+	        }
         } catch (ProcessTimedOutException $error) {
-            $job = $this->queue->serializer->unserialize($message);
+            $job = $this->serializer->unserialize($message);
             return $this->queue->handleError($id, $job, $ttr, $attempt, $error);
         }
 

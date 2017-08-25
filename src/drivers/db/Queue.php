@@ -103,6 +103,25 @@ class Queue extends CliQueue
 		], [ 'id' => $id ])->execute();
 	}
 
+	/**
+	 * @param int $id
+	 */
+	public function cancel ($id)
+	{
+		$queue = (new Query())
+			->from($this->tableName)
+			->where(['id' => $id])
+			->one($this->db);
+
+		if ($queue[ 'pid' ] and !is_null($queue[ 'done_at' ]))
+			shell_exec("pkill -P " . $queue[ 'pid' ]);
+
+		$this->db->createCommand()->update('queue', [
+			'canceled_at' => time(),
+		], [ 'id' => $queue[ 'id' ] ])->execute();
+
+	}
+
     /**
      * @inheritdoc
      */

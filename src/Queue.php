@@ -179,6 +179,11 @@
 		abstract protected function addPid ($id, $pid);
 
 		/**
+		 * @param int $id
+		 */
+		abstract public function cancel ($id);
+
+		/**
 		 * @param string|null $id      of a job message
 		 * @param string      $message
 		 * @param int         $ttr     time to reserve

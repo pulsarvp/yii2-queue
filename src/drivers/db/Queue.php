@@ -119,7 +119,7 @@
 				->one($this->db);
 
 			if ($queue[ 'pid' ] and !is_null($queue[ 'done_at' ]))
-				shell_exec("kill -P " . $queue[ 'pid' ]);
+				shell_exec("kill " . $queue[ 'pid' ]);
 
 			$this->db->createCommand()->update('queue', [
 				'canceled_at' => time(),

@@ -7,6 +7,7 @@
 
 	namespace yii\queue\db;
 
+	use Yii;
 	use yii\base\Exception;
 	use yii\base\InvalidParamException;
 	use yii\db\Connection;
@@ -103,6 +104,7 @@
 		 */
 		public function addPid ($id, $pid)
 		{
+			$this->reconnect();
 			$this->db->createCommand()->update($this->tableName, [
 				'pid' => $pid,
 			], [ 'id' => $id ])->execute();
@@ -113,6 +115,7 @@
 		 */
 		public function cancel ($id)
 		{
+			$this->reconnect();
 			$queue = ( new Query() )
 				->from($this->tableName)
 				->where([ 'id' => $id ])
@@ -131,6 +134,7 @@
 		 */
 		protected function pushMessage ($message, $ttr, $delay, $priority)
 		{
+			$this->reconnect();
 			$this->db->createCommand()->insert($this->tableName, [
 				'channel'   => $this->channel,
 				'job'       => $message,
@@ -150,6 +154,7 @@
 		 */
 		protected function status ($id)
 		{
+			$this->reconnect();
 			$payload = ( new Query() )
 				->from($this->tableName)
 				->where([ 'id' => $id ])
@@ -191,6 +196,7 @@
 		 */
 		protected function reserve ()
 		{
+			$this->reconnect();
 			if (!$this->mutex->acquire(__CLASS__ . $this->channel, $this->mutexTimeout))
 			{
 				throw new Exception("Has not waited the lock.");
@@ -247,6 +253,7 @@
 		 */
 		protected function release ($payload)
 		{
+			$this->reconnect();
 			if ($this->deleteReleased)
 			{
 				$this->db->createCommand()->delete(
@@ -263,4 +270,14 @@
 				)->execute();
 			}
 		}
+
+		/**
+		 * @inheritdoc
+		 */
+		protected function reconnect ()
+		{
+			$this->db->close();
+			$this->db->open();
+		}
+
 	}

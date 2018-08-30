@@ -491,4 +491,14 @@
 			$this->dsn = Yii::$app->settings->get($name);
 		}
 
+		public function setVhostDb ($name)
+		{
+			$this->vhost = Yii::$app->settings->get($name);
+		}
+
+		public function sethostDb ($name)
+		{
+			$this->host = Yii::$app->settings->get($name);
+		}
+
 	}

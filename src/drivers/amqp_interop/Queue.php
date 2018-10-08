@@ -421,6 +421,7 @@
 
 			$queue = $this->context->createQueue($this->queueName);
 			$queue->addFlag(AmqpQueue::FLAG_DURABLE);
+			$queue->setArguments([ 'x-max-priority' => $this->maxPriority ]);
 			$this->context->declareQueue($queue);
 
 			$topic = $this->context->createTopic($this->exchangeName);
